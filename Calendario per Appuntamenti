@@ -1,0 +1,108 @@
+import React, { useState } from 'react';
+import { Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+
+// Funzione per generare date casuali disponibili
+const generateAvailableDates = () => {
+  const dates = [];
+  for (let i = 0; i < 5; i++) {
+    const date = new Date();
+    date.setDate(date.getDate() + Math.floor(Math.random() * 30));
+    dates.push(date);
+  }
+  return dates.sort((a, b) => a - b);
+};
+
+const BookingCalendar = () => {
+  const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState(null);
+  const [availableDates] = useState(generateAvailableDates());
+
+  // Funzione per ottenere i giorni del mese corrente
+  const getDaysInMonth = (date) => {
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    const days = new Date(year, month + 1, 0).getDate();
+    return Array.from({ length: days }, (_, i) => new Date(year, month, i + 1));
+  };
+
+  // Funzione per formattare la data
+  const formatDate = (date) => {
+    return date.toLocaleDateString('it-IT', { day: 'numeric', month: 'long', year: 'numeric' });
+  };
+
+  // Funzione per passare al mese successivo
+  const nextMonth = () => {
+    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1));
+  };
+
+  // Funzione per tornare al mese precedente
+  const prevMonth = () => {
+    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1));
+  };
+
+  // Funzione per gestire la selezione di una data
+  const handleDateSelect = (date) => {
+    setSelectedDate(date);
+  };
+
+  // Funzione per verificare se una data è disponibile
+  const isDateAvailable = (date) => {
+    return availableDates.some(availableDate => 
+      availableDate.getDate() === date.getDate() &&
+      availableDate.getMonth() === date.getMonth() &&
+      availableDate.getFullYear() === date.getFullYear()
+    );
+  };
+
+  return (
+    <Card className="w-full max-w-md mx-auto">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className="text-2xl font-bold">Prenota un appuntamento</CardTitle>
+        <Calendar className="h-6 w-6 text-gray-500" />
+      </CardHeader>
+      <CardContent>
+        <div className="flex justify-between items-center mb-4">
+          <Button onClick={prevMonth} variant="outline" size="icon">
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <h2 className="text-lg font-semibold">
+            {currentMonth.toLocaleDateString('it-IT', { month: 'long', year: 'numeric' })}
+          </h2>
+          <Button onClick={nextMonth} variant="outline" size="icon">
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
+        <div className="grid grid-cols-7 gap-2">
+          {['Dom', 'Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab'].map(day => (
+            <div key={day} className="text-center font-medium text-sm">
+              {day}
+            </div>
+          ))}
+          {getDaysInMonth(currentMonth).map((date, index) => (
+            <Button
+              key={index}
+              onClick={() => handleDateSelect(date)}
+              disabled={!isDateAvailable(date)}
+              variant={selectedDate && selectedDate.getTime() === date.getTime() ? "default" : "outline"}
+              className={`p-2 text-sm ${
+                isDateAvailable(date) ? 'bg-green-100 hover:bg-green-200' : 'opacity-50'
+              }`}
+            >
+              {date.getDate()}
+            </Button>
+          ))}
+        </div>
+        {selectedDate && (
+          <div className="mt-4 text-center">
+            <p className="font-semibold">Data selezionata:</p>
+            <p>{formatDate(selectedDate)}</p>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+};
+
+export default BookingCalendar;
